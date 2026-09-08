@@ -1,0 +1,67 @@
+#!/bin/sh
+# ============================================================
+#  libertysubproxy — init-скрипт Entware/opkg для Keenetic
+#  Установка: /opt/etc/init.d/S99libertysubproxy (chmod +x)
+#  Логи: /opt/var/log/libertysubproxy.log
+# ============================================================
+
+NAME=libertysubproxy
+BIN=/opt/bin/$NAME
+PIDFILE=/opt/var/run/$NAME.pid
+LOGFILE=/opt/var/log/$NAME.log
+LISTEN=":65432"
+UPLIMEM=16
+
+start() {
+    [ -f "$PIDFILE" ] && kill -0 "$(cat $PIDFILE)" 2>/dev/null && {
+        echo "$NAME already running"
+        return 0
+    }
+    echo "Starting $NAME..."
+    # -d: демонизация (setsid внутри); -memlimit: софт-лимит кучи Go в MiB
+    "$BIN" -d -listen "$LISTEN" -memlimit "$UPLIMEM" -pidfile "$PIDFILE" >>"$LOGFILE" 2>&1
+    sleep 1
+    if [ -f "$PIDFILE" ] && kill -0 "$(cat $PIDFILE)" 2>/dev/null; then
+        echo "started (pid $(cat $PIDFILE))"
+    else
+        echo "FAILED to start, see $LOGFILE"
+        return 1
+    fi
+}
+
+stop() {
+    if [ -f "$PIDFILE" ]; then
+        PID=$(cat "$PIDFILE")
+        if kill -0 "$PID" 2>/dev/null; then
+            echo "Stopping $NAME (pid $PID)..."
+            kill "$PID" 2>/dev/null
+            # Ждём до 5 секунд корректного завершения
+            i=0
+            while kill -0 "$PID" 2>/dev/null && [ $i -lt 10 ]; do
+                sleep 0.5
+                i=$((i + 1))
+            done
+            kill -9 "$PID" 2>/dev/null
+        fi
+        rm -f "$PIDFILE"
+        echo "stopped"
+    else
+        echo "$NAME not running"
+    fi
+}
+
+status() {
+    if [ -f "$PIDFILE" ] && kill -0 "$(cat $PIDFILE)" 2>/dev/null; then
+        echo "$NAME is running (pid $(cat $PIDFILE))"
+    else
+        echo "$NAME is not running"
+    fi
+}
+
+case "$1" in
+    start)   start ;;
+    stop)    stop ;;
+    restart) stop; sleep 1; start ;;
+    status)  status ;;
+    *)       echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
+esac
