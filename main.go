@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-const defaultUpstream = "https://connliberty.com/connection/subs/"
+const defaultUpstream = "https://sub.conn-liberty.net/connection/subs/"
 
 // downstreamClient — тонко настроенный транспорт: минимум горутин и памяти.
 var downstreamClient *http.Client
