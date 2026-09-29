@@ -15,7 +15,6 @@ build\build.bat
 - `bin\libertysubproxy-arm64` — статический ELF-бинарник для Keenetic Hopper SE
 - `bin\libertysubproxy-armv7` — на всякий случай для 32-битных Keenetic
 - `bin\debug\libertysubproxy.exe` — Windows-версия для локальной отладки
-  (намеренно в отдельной папке `debug\`, чтобы не перепутать при копировании на роутер)
 
 Бинарник собирается с `CGO_ENABLED=0 -ldflags "-s -w" -trimpath` —
 без зависимостей от libc, размер ~3-4 МБ.
